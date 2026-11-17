@@ -110,6 +110,30 @@ def test_valid_definitions_load(tmp_path):
     assert set(d.questions) == set(QuestionKey)
 
 
+def test_bare_yes_no_keys_are_strings(tmp_path):
+    # YAML 1.1 reads bare yes/no as booleans; hand-written files use them unquoted.
+    body = "".join(
+        f"  {k.value}:\n    question: Q?\n    yes: Y\n    partial: P\n    no: N\n"
+        for k in QuestionKey
+    )
+    d = load_definitions(write_text(tmp_path, "d.yaml", 'version: "1"\nquestions:\n' + body))
+    assert d.questions[QuestionKey.KNOW].yes == "Y"
+    assert d.questions[QuestionKey.KNOW].no == "N"
+
+
+def test_true_false_still_booleans(tmp_path):
+    from ptlite.files import _read_yaml
+
+    assert _read_yaml(write_text(tmp_path, "x.yaml", "a: true\nb: no\n")) == {"a": True, "b": "no"}
+
+
+def test_shipped_files_validate():
+    # The real hand-written files in lite/ must always pass validation.
+    from ptlite.cli import DEFAULT_DIR, validate
+
+    assert validate(DEFAULT_DIR) == 0
+
+
 def test_integer_version_read_as_string(tmp_path):
     d = load_definitions(write_yaml(tmp_path, "d.yaml", {**DEFINITIONS, "version": 2}))
     assert d.version == "2"

@@ -7,6 +7,7 @@ the file, the entry or row, and the field at fault.
 from __future__ import annotations
 
 import csv
+import re
 from pathlib import Path
 
 import yaml
@@ -26,6 +27,25 @@ class LoadError(Exception):
     pass
 
 
+class _Loader(yaml.SafeLoader):
+    """SafeLoader where only true/false are booleans.
+
+    PyYAML follows YAML 1.1, which also reads yes/no/on/off as booleans. That turns
+    the `yes:` and `no:` keys in definitions.yaml into True and False.
+    """
+
+
+_Loader.yaml_implicit_resolvers = {
+    first: [(tag, rx) for tag, rx in resolvers if tag != "tag:yaml.org,2002:bool"]
+    for first, resolvers in yaml.SafeLoader.yaml_implicit_resolvers.items()
+}
+_Loader.add_implicit_resolver(
+    "tag:yaml.org,2002:bool",
+    re.compile(r"^(?:true|True|TRUE|false|False|FALSE)$"),
+    list("tTfF"),
+)
+
+
 def _describe(err: ValidationError, path: Path, where: str = "") -> str:
     lines = []
     for e in err.errors():
@@ -37,7 +57,7 @@ def _describe(err: ValidationError, path: Path, where: str = "") -> str:
 
 def _read_yaml(path: Path) -> object:
     try:
-        return yaml.safe_load(path.read_text(encoding="utf-8"))
+        return yaml.load(path.read_text(encoding="utf-8"), Loader=_Loader)  # noqa: S506
     except FileNotFoundError as e:
         raise LoadError(f"{path}: file not found") from e
     except yaml.YAMLError as e:
