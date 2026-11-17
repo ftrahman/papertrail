@@ -7,7 +7,7 @@ questions:
     no: TODO
   show:
     question: Can the agency share that information publicly?
-    yes: No confidentiality or trade-secret clause blocks disclosure of it, or a clause explicitly allows disclosure
+    yes: A clause explicitly allows disclosure of it
     partial: TODO
     no: A clause barring disclosure
   test:
