@@ -1,0 +1,23 @@
+# One entry per contract. Ids become file names: lowercase letters, digits, - and _.
+# pdf paths are relative to lite/. A related document with no pdf means we don't
+# have it, which blocks a `silent` answer (the answer becomes `incomplete`).
+#
+# - id: tx-dir-deloitte-tiers
+#   title: TIERS maintenance and operations
+#   source_url: https://...
+#   agency: Texas Department of Information Resources
+#   vendor: Deloitte
+#   system: TIERS
+#   state: TX
+#   date: 2020-01-15
+#   obtained_via: portal            # portal | records_request | archive
+#   pdf: pdfs/tx-dir-deloitte-tiers.pdf
+#   record_status:                  # optional: withheld | no_record
+#   notes:
+#   related_documents:
+#     - id: msa
+#       title: Master Services Agreement
+#       kind: master_agreement      # master_agreement | exhibit | addendum | amendment
+#       source_url:
+#       pdf:
+[]

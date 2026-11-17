@@ -1,0 +1,27 @@
+version: "1"
+questions:
+  know:
+    question: Must the vendor give the agency documentation of inputs, training data, validation, and known limits?
+    yes: A clause obliges the vendor to provide that documentation to the agency
+    partial: TODO
+    no: TODO
+  show:
+    question: Can the agency share that information publicly?
+    yes: No confidentiality or trade-secret clause blocks disclosure of it, or a clause explicitly allows disclosure
+    partial: TODO
+    no: A clause barring disclosure
+  test:
+    question: Are there measurable performance or error thresholds, plus a right to audit?
+    yes: A stated threshold and an audit or testing right for the agency or a third party
+    partial: An audit right with no threshold
+    no: TODO
+  act:
+    question: Are payment, renewal, or termination tied to those thresholds, and must the vendor re-validate when the model changes?
+    yes: A clause links a consequence to performance, or requires re-validation on change
+    partial: TODO
+    no: TODO
+  leave:
+    question: Does the government keep its data and outputs, and can it switch vendors?
+    yes: Clauses on data ownership and on transition or portability
+    partial: TODO
+    no: TODO
