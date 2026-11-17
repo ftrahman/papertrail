@@ -23,8 +23,8 @@ For each of 20 to 30 public state and local contracts, `ptlite check` asks five 
 | Key | Question |
 | --- | --- |
 | `know` | Must the vendor give the agency documentation of inputs, training data, validation, and known limits? |
-| `show` | Can the agency share that information publicly, or does a confidentiality or trade-secret clause block it? |
-| `test` | Are there measurable performance or error thresholds, plus a right for the agency or a third party to audit? |
+| `show` | Can the agency share that information publicly? |
+| `test` | Are there measurable performance or error thresholds, plus a right to audit? |
 | `act` | Are payment, renewal, or termination tied to those thresholds, and must the vendor re-validate when the model changes? |
 | `leave` | Does the government keep its data and outputs, and can it switch vendors? |
 
