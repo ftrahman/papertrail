@@ -8,7 +8,7 @@ questions:
   show:
     question: Can the agency share that information publicly?
     yes: A clause explicitly allows disclosure of it
-    partial: TODO
+    partial: A confidentiality clause restricts disclosure but makes an exception for disclosure required by public records law
     no: A clause barring disclosure
   test:
     question: Are there measurable performance or error thresholds, plus a right to audit?
