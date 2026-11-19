@@ -1,14 +1,17 @@
 from pathlib import Path
+from typing import Any
 
 import pytest
 import yaml
+from pydantic import ValidationError
 
 from ptlite.files import LoadError, load_contracts, load_definitions, load_silence_log
-from ptlite.schemas import Answer, QuestionKey
+from ptlite.schemas import Answer, Contract, Level, QuestionKey
 
 CONTRACT = {
     "id": "tx-dir-deloitte-tiers",
     "title": "TIERS maintenance and operations",
+    "level": "state",
     "source_url": "https://example.gov/contract.pdf",
     "agency": "Texas DIR",
     "vendor": "Deloitte",
@@ -23,7 +26,10 @@ CONTRACT = {
 }
 
 QUESTION = {"question": "Q?", "yes": "A clause obliges it", "partial": "", "no": ""}
-DEFINITIONS = {"version": "1", "questions": {k.value: dict(QUESTION) for k in QuestionKey}}
+DEFINITIONS: dict[str, Any] = {
+    "version": "1",
+    "questions": {k.value: dict(QUESTION) for k in QuestionKey},
+}
 
 HEADER = "agency,request,date_filed,date_answered,outcome,notes,contract_id,url\n"
 
@@ -99,6 +105,16 @@ def test_top_level_must_be_list(tmp_path):
 def test_missing_file(tmp_path):
     with pytest.raises(LoadError, match="file not found"):
         load_contracts(tmp_path / "nope.yaml")
+
+
+def test_federal_contract_needs_no_state():
+    c = Contract.model_validate({**CONTRACT, "level": "federal", "state": None})
+    assert c.level is Level.FEDERAL
+
+
+def test_state_contract_needs_state():
+    with pytest.raises(ValidationError, match="state is required"):
+        Contract.model_validate({**CONTRACT, "level": "state", "state": None})
 
 
 # --- definitions.yaml ---

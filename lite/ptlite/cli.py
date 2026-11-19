@@ -44,6 +44,7 @@ def validate(lite_dir: Path) -> int:
         print("\n".join(errors), file=sys.stderr)
         print(f"\n{len(errors)} problem(s) found.", file=sys.stderr)
         return 1
+    assert definitions is not None  # loading failed only if errors is non-empty
 
     outcomes = Counter(r.outcome.value for r in requests)
     by_outcome = ", ".join(f"{n} {o}" for o, n in sorted(outcomes.items())) or "none"
