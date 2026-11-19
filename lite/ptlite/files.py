@@ -14,11 +14,14 @@ import yaml
 from pydantic import ValidationError
 
 from .schemas import (
+    LABELS_OPTIONAL,
+    LABELS_REQUIRED,
     SILENCE_LOG_OPTIONAL,
     SILENCE_LOG_REQUIRED,
     Contract,
     ContractsFile,
     Definitions,
+    LabelRow,
     SilenceLogRow,
 )
 
@@ -126,6 +129,36 @@ def load_silence_log(path: Path) -> list[SilenceLogRow]:
                 continue  # skip blank lines
             try:
                 rows.append(SilenceLogRow.model_validate(row))
+            except ValidationError as e:
+                raise LoadError(_describe(e, path, f"line {reader.line_num}")) from e
+        return rows
+
+
+def load_labels(path: Path) -> list[LabelRow]:
+    try:
+        f = path.open(newline="", encoding="utf-8")
+    except FileNotFoundError as e:
+        raise LoadError(f"{path}: file not found") from e
+    with f:
+        reader = csv.DictReader(f)
+        header = reader.fieldnames or []
+        missing = [c for c in LABELS_REQUIRED if c not in header]
+        unknown = [c for c in header if c not in LABELS_REQUIRED + LABELS_OPTIONAL]
+        if missing or unknown:
+            parts = []
+            if missing:
+                parts.append(f"missing column(s): {', '.join(missing)}")
+            if unknown:
+                parts.append(f"unknown column(s): {', '.join(unknown)}")
+            raise LoadError(f"{path}: bad header: {'; '.join(parts)}")
+        rows = []
+        for row in reader:
+            if None in row:
+                raise LoadError(f"{path} (line {reader.line_num}): more fields than columns")
+            if not any((v or "").strip() for v in row.values()):
+                continue  # skip blank lines
+            try:
+                rows.append(LabelRow.model_validate(row))
             except ValidationError as e:
                 raise LoadError(_describe(e, path, f"line {reader.line_num}")) from e
         return rows
