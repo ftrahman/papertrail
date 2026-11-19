@@ -1,64 +1,55 @@
 # Paper Trail
 
-Paper Trail answers accountability questions about government AI systems using only the public record: vendor contracts, privacy impact assessments, audits, court filings. Every answer cites the exact passage it came from. When the record is silent, the tool says so instead of guessing.
+Answers accountability questions about government AI systems from public records,
+citing the exact passage for every answer. See README.md for background.
 
-**Mission:** make the division of responsibility visible, so the people affected by a government AI system, and the people with power to change it, can see what was promised, what was hidden, and what was never asked for, in time to act.
-
-The project grew out of my op-ed, *Engineered Silence*. A confident wrong answer is the worst failure this tool can have, because it does to a vendor or agency what these systems do to the people they judge.
+The worst failure is a confident wrong answer: never claim a clause is absent
+unless every page was read, and never trust a quote that hasn't been verified.
+Findings say what a contract does or doesn't oblige, never that no accountability exists.
 
 ## Design docs
 
-Read the relevant doc before starting a milestone. If code and a doc disagree, ask me rather than picking one.
+In `design/`. Read the relevant one before starting a milestone. If code and a doc disagree, ask rather than picking one.
 
-- Lightweight Contract Check (current work): https://claude.ai/artifact/5VAshS8UyfxJsPo8GkezBE
-- System Design (the MVP, milestones 0 to 4, later): https://claude.ai/artifact/UwXAXawb5738QAis49YDqA
-- Research Notes and Follow-ups: https://claude.ai/artifact/UM4JYWjKnD3oH7Kdz6vuMa
+- `design/lite.md`: the lightweight contract check (current work), with its system diagram and status
+- `design/mvp.md`: the MVP, the contract check at scale, milestones 0 to 4 (later)
+- `design/research.md`: the research behind the questions, decisions made, and open decisions
+
+Before resolving anything listed under open decisions in `research.md`, ask. When a decision is made, add it to that file's decision log.
 
 ## Current scope: the lightweight contract check
 
-Scripts and flat files in `lite/`. No database, server, embeddings, retrieval, agent loop, or web UI yet. Those belong to the MVP.
+Scripts and flat files in `lite/`. No server or MCP yet; those belong to the MVP. Embeddings, retrieval, agents and a web UI come after the MVP, if at all.
 
-For each of 20 to 30 public state and local contracts, `ptlite check` asks five questions and answers each with a verified quote or a silence status.
-
-| Key | Question |
-| --- | --- |
-| `know` | Must the vendor give the agency documentation of inputs, training data, validation, and known limits? |
-| `show` | Can the agency share that information publicly? |
-| `test` | Are there measurable performance or error thresholds, plus a right to audit? |
-| `act` | Are payment, renewal, or termination tied to those thresholds, and must the vendor re-validate when the model changes? |
-| `leave` | Does the government keep its data and outputs, and can it switch vendors? |
-
-The authoritative wording and what counts as each answer live in `lite/definitions.yaml`, which is versioned. Don't hardcode definitions in prompts; load them from that file.
+For 20 to 30 public contracts (state and local, plus a small federal batch reported separately), `ptlite check` asks five questions (`know`, `show`, `test`, `act`, `leave`) and answers each with a verified quote or a silence status. Their wording and what counts as each answer live only in `lite/definitions.yaml`, which is versioned. Load them from that file; never hardcode them in prompts or code.
 
 **Answer values**
 
-- `yes`: a quoted clause meets the definition
-- `partial`: a clause addresses it but falls short
-- `no`: a clause rules it out (for example, one barring disclosure)
-- `silent`: every page of the full contract was read and nothing addresses it
-- `incomplete`: the contract incorporates a document we don't have, so silence can't be claimed
-- `unverified`: the model gave a yes, partial, or no but its quote failed verification; needs manual review
-- `withheld` and `no_record`: per contract, from records requests, never produced by the model
+- `yes`, `partial`, `no`: a quoted, verified clause meets, partly meets, or rules out the definition
+- `silent`: every page was read and nothing addresses it
+- `incomplete`: would be `silent`, but an incorporated document is missing
+- `unverified`: the quote failed verification; needs manual review
+- `withheld`, `no_record`: per contract, from records requests; never produced by the model
 
 ## Rules that must not be broken
 
 1. **Read the whole contract.** No top-k retrieval for these questions. A missed clause looks identical to a missing one.
-2. **`silent` means every page was read.** For long contracts, split into overlapping page windows, ask each window, and return `silent` only if every window comes back empty. Never truncate.
-3. **Verify every quote in code.** A `yes`, `partial`, or `no` must include an exact quote and page. The script checks the quote against the extracted text of that page (tolerating whitespace, line breaks, and end-of-line hyphenation, nothing more). Failure downgrades the answer to `unverified`. The model's word is never trusted.
+2. **`silent` means every page was read.** Never truncate. For long contracts, ask overlapping page windows and return `silent` only if every window is empty. Until windows exist, a contract too long for one call is logged as skipped, never answered.
+3. **Verify every quote in code.** A `yes`, `partial` or `no` needs an exact quote and page, checked against that page's extracted text. Tolerated: whitespace, line breaks, either reading of a line-end hyphen, Unicode compatibility forms (ligatures, non-breaking spaces), and curly quotes and dashes. Nothing more. Quotes under five words don't count as evidence. Failure downgrades the answer to `unverified`.
 4. **Empty text is not silence.** A PDF with no text layer is flagged for OCR and skipped, never read as an empty contract.
-5. **Missing incorporated documents block `silent`.** If the contract incorporates a master agreement, exhibit, or addendum that isn't in `contracts.yaml`, the answer is `incomplete`, naming the missing document.
-6. **Human-written files are ground truth.** Never edit `contracts.yaml`, `definitions.yaml`, `labels.csv`, or `silence_log.csv` without my explicit approval. Script output (`text/`, `results.jsonl`, `reports/`) can always be regenerated.
-7. **Record provenance.** Every line in `results.jsonl` carries the model ID, prompt version, definitions version, and timestamp.
+5. **Missing incorporated documents block `silent`.** If a master agreement, exhibit or addendum the contract incorporates has no PDF in `contracts.yaml`, the answer is `incomplete`, naming the missing document.
+6. **Hand-written files are ground truth.** Never edit `contracts.yaml`, `definitions.yaml`, `labels.csv` or `silence_log.csv` without the maintainer's explicit approval. Script output (`text/`, `results.jsonl`, `reports/`) can always be regenerated.
+7. **Record provenance.** Every line in `results.jsonl` carries the model that answered, prompt version, definitions version and timestamp.
 
 ## Layout
 
 ```
 lite/
-  contracts.yaml      # me: contracts and related documents, how each was obtained
-  definitions.yaml    # me: the five questions and answer definitions, versioned
-  labels.csv          # me: hand labels, the gold set
-  silence_log.csv     # me: records requests and outcomes
-  pdfs/               # me: downloaded contracts (gitignored if large)
+  contracts.yaml      # hand: contracts, related documents, how each was obtained
+  definitions.yaml    # hand: the five questions and answer definitions, versioned
+  labels.csv          # hand: hand labels, the gold set
+  silence_log.csv     # hand: records requests and outcomes
+  pdfs/               # hand: downloaded contracts
   text/<id>.json      # script: page-numbered text plus file hash
   results.jsonl       # script: one line per model answer
   reports/<date>.md   # script: score reports
@@ -66,20 +57,21 @@ lite/
   tests/
 ```
 
-Commands: `ptlite extract`, `ptlite check`, `ptlite score`.
+Commands: `ptlite validate` (built); `ptlite extract`, `ptlite check`, `ptlite score` (in progress). Run `make check` (imports, lint, types, tests) before committing.
 
 ## Stack and conventions
 
-- Python 3.12 or later, Pydantic for every schema (model output, results, labels), PyYAML, PyMuPDF for extraction, pytest, ruff.
-- Model provider behind one small interface, Anthropic by default, via the direct API. Model ID comes from an environment variable, not code. API keys come from the environment and are never committed.
-- Use prompt caching so the contract text is sent once and reused across the five questions. Check the current Anthropic docs for the caching and structured-output API before writing that code; don't rely on memory.
-- Structured output only: the model returns JSON matching a Pydantic schema. Invalid JSON is retried once, then recorded as an error, never guessed at.
-- Tests never call a real model or the network. Use a fake model client with scripted responses, and small PDFs generated in the tests.
-- Keep the extraction and quote-verification code clean and standalone. The MVP will reuse it.
+- Python 3.12+, Pydantic for every schema, PyYAML, PyMuPDF, pytest, ruff, mypy.
+- The model sits behind the `ModelClient` interface, Anthropic by default via the direct API. Model ID from `PTLITE_MODEL`, API key from the environment; neither is ever committed.
+- Prompt caching sends the contract once and reuses it across the five questions. Check the current Anthropic docs for caching and structured output before changing that code.
+- Structured output only. Unusable output is retried once, then recorded as an error row, never guessed at.
+- Tests never call a real model or the network: use the fake model client and small PDFs generated in the tests.
+- Keep `extract.py` and `verify.py` clean and standalone; the MVP reuses them.
 
-## Working with me
+## Workflow
 
-- Build one milestone at a time (L0 to L3 in the Lightweight doc), with tests, then stop for my review before the next.
-- This is a private GitHub repo until the MVP is done. Commit in small, described steps.
+- The maintainer writes the code. Explain, sketch and review; don't edit source files unless asked for that specific change.
+- Build one milestone at a time with tests, and stop for review before the next.
+- One branch per reviewable feature; small, described commits; merge to `main` through a reviewed pull request.
 - When a definition is ambiguous, ask. Don't resolve it in the prompt.
-- If something in these rules makes a task impossible, say so instead of working around it.
+- If a rule here makes a task impossible, say so instead of working around it.

@@ -1,27 +1,143 @@
-version: "1"
+# Adopted 2026-11-19 from the draft of 2026-11-17, which drew on the EU model
+# clauses (MCC-AI, high-risk and light), the GovAI Coalition AI addendum and
+# FactSheet, GSAR 552.239-7001, the CDT vendor transparency rubric, and
+# Tillipman, "Buying Blind" (2026).
+
+version: "2"
 questions:
   know:
-    question: Must the vendor give the agency documentation of inputs, training data, validation, and known limits?
-    yes: A clause obliges the vendor to provide that documentation to the agency
-    partial: TODO
-    no: TODO
+    question: >-
+      Must the vendor give the agency documentation of the system's inputs,
+      training data, validation or testing, and known limitations?
+    yes: >-
+      A clause obliges the vendor to give the agency documentation covering all
+      four: inputs, training data, validation or testing results, and known
+      limitations. Documentation delivered as an exhibit or fact sheet counts
+      if that exhibit is part of the contract family. Where the model was built
+      by a third party, naming that party and describing what the vendor knows
+      of its training data counts as training data documentation.
+    partial: >-
+      A clause obliges documentation of some but not all four items, or obliges
+      only a general description of the system, or provides documentation only
+      on request without saying what it must contain.
+    no: >-
+      A clause says the vendor need not provide such documentation to the
+      agency, or withholds it from the agency itself as proprietary.
+    # Examples. yes: MCC-AI high-risk art. 4 and Annex C (technical
+    # documentation at delivery, updated at every substantial modification);
+    # GovAI addendum with the AI FactSheet attached as Exhibit A.
+    # partial: GovAI "provide, upon request, a copy of their Risk Management
+    # Plan" on its own.
+    # Decided 2026-11-17: documentation "on request" counts as yes when the
+    # contract says what it must contain, partial when it doesn't.
+
   show:
-    question: Can the agency share that information publicly?
-    yes: A clause explicitly allows disclosure of it
-    partial: A confidentiality clause restricts disclosure but makes an exception for disclosure required by public records law
-    no: A clause barring disclosure
+    question: >-
+      Can the agency share the vendor's documentation about the system, or its
+      own findings about the system, with the public?
+    yes: >-
+      A clause explicitly allows the agency to publish or disclose the
+      documentation (for example in a public register of AI systems) or the
+      conclusions of an audit.
+    partial: >-
+      A clause allows only narrower disclosure: describing the agency's general
+      use of the system, or explaining individual decisions to the people
+      affected by them. Or a confidentiality clause restricts disclosure but
+      makes an exception for disclosure required by public records law.
+    no: >-
+      A clause bars disclosure of the documentation or treats it as
+      confidential or a trade secret, with no public records exception.
+    # Examples. yes: MCC-AI high-risk art. 19.2 (share in a register) and
+    # art. 20.4 (publish audit conclusions). partial: GovAI explainability
+    # clause ("communicate its general usage of the AI system"); MCC-AI light
+    # art. 11.2 (disclose explanations to affected persons).
+    # Note: assessed on its own even when `know` is silent; a confidentiality
+    # clause covering vendor materials generally is enough for `no`.
+    # Decided 2026-11-17: yes needs a clause that explicitly allows disclosure
+    # (v1's rule). A contract that says nothing is silent, not yes.
+
   test:
-    question: Are there measurable performance or error thresholds, plus a right to audit?
-    yes: A stated threshold and an audit or testing right for the agency or a third party
-    partial: An audit right with no threshold
-    no: TODO
+    question: >-
+      Does the contract set a required level of accuracy or error for the
+      system, and give the agency or an independent party the right to audit or
+      test it?
+    yes: >-
+      Both: a stated required level of accuracy or error (for example a
+      maximum false positive rate or a minimum accuracy on a defined test), and
+      a right for the agency or a third party to audit or test the system.
+    partial: >-
+      Only one of the two. This includes an audit or testing right with no
+      required level; an obligation to report accuracy or let the agency
+      monitor it, with no required level; a required level with no audit or
+      testing right; and an obligation only to make reasonable efforts toward
+      accuracy.
+    no: >-
+      A clause excludes or restricts the agency's right to audit or test the
+      system.
+    # Uptime, availability, and response-time guarantees do not count as a
+    # required level of accuracy or error.
+    # Examples. yes: MCC-AI high-risk art. 2 (testing "against prior defined
+    # metrics and probabilistic thresholds") with Annex G filled in, plus
+    # art. 20 (annual audit, independent auditor allowed).
+    # partial: GovAI addendum (accuracy monitoring and an audit right, no
+    # required level); GSAR 552.239-7001 ("reasonable efforts" toward
+    # accurate answers).
+    # Decided 2026-11-17: a general "as is" disclaimer of accuracy warranties
+    # does not make test `no`; it is boilerplate and says nothing about
+    # testing or audit rights.
+
   act:
-    question: Are payment, renewal, or termination tied to those thresholds, and must the vendor re-validate when the model changes?
-    yes: A clause links a consequence to performance, or requires re-validation on change
-    partial: TODO
-    no: TODO
+    question: >-
+      Can the agency require a fix, suspend the system, withhold payment, or
+      end the contract when the system fails its requirements, and must the
+      vendor re-test or re-assess the system when the model changes?
+    yes: >-
+      Both: a clause ties a consequence (a required fix by a deadline,
+      suspension, withheld payment, non-renewal, or termination for cause) to
+      the system failing its performance or AI-specific requirements, and a
+      clause requires re-testing, re-validation, or a new assessment after a
+      substantial change to the model.
+    partial: >-
+      Only one of the two; or the vendor must only give notice of model
+      changes, with or without an option to stay on the old version, and need
+      not re-test.
+    no: >-
+      A clause lets the vendor change the model without notice, or limits the
+      agency's remedy for poor performance to service credits.
+    # Termination for convenience does not count: it is not tied to
+    # performance.
+    # Examples. yes: MCC-AI high-risk art. 11.2 (new conformity assessment
+    # after a substantial modification) with art. 20.3 (default if audit
+    # findings aren't fixed). partial: GovAI addendum (30 days to fix, prior
+    # notice of upgrades, no re-testing); GSAR 552.239-7001 (5-day notice
+    # when a model version is retired).
+    # Decided 2026-11-17: (1) yes needs both parts ("and", as v1's question
+    # says), not either part as v1's yes definition said. (2) Consequences tied
+    # to failing requirements count, not only numeric thresholds, because even
+    # the model clauses rarely tie payment to a number. (3) Remedies limited
+    # to service credits make act `no`.
+
   leave:
-    question: Does the government keep its data and outputs, and can it switch vendors?
-    yes: Clauses on data ownership and on transition or portability
-    partial: TODO
-    no: TODO
+    question: >-
+      Does the government keep its data and what is built from it, and can it
+      get that data back in a usable form to switch vendors?
+    yes: >-
+      Both: the agency owns its data and the outputs or custom developments
+      made from it (such as a model fine-tuned on its data), and the vendor
+      must hand the data over in a usable, machine-readable format or help
+      with the transition when the contract ends.
+    partial: >-
+      Ownership without a handover or transition obligation, or a handover
+      obligation without clear agency ownership.
+    no: >-
+      A clause gives the vendor ownership of, or unrestricted rights to use,
+      the agency's data or outputs, or makes their return conditional on
+      fees beyond the cost of transfer.
+    # Examples. yes: MCC-AI high-risk arts. 15 and 17 (agency owns its data
+    # sets; handover in a common file format) with art. 5 (logs handed over
+    # at the end); GovAI data ownership plus data portability clauses.
+    # partial: GovAI data ownership clause on its own. GSAR 552.239-7001
+    # covers ownership of fine-tuned weights and deletion at contract end, but
+    # deletion alone does not help the agency switch vendors.
+    # Decided 2026-11-17: a vendor license to use de-identified, aggregated
+    # data (as GSAR 552.239-7001 allows) does not make leave `no`.
