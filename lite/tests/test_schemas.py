@@ -5,7 +5,7 @@ import pytest
 import yaml
 from pydantic import ValidationError
 
-from ptlite.files import LoadError, load_contracts, load_definitions, load_silence_log
+from ptlite.files import LoadError, load_contracts, load_definitions, load_labels, load_silence_log
 from ptlite.schemas import Answer, Contract, Level, QuestionKey
 
 CONTRACT = {
@@ -228,3 +228,35 @@ def test_too_many_fields_rejected(tmp_path):
     text = HEADER + "A,B,2026-11-18,,pending,,,,extra\n"
     with pytest.raises(LoadError, match="more fields"):
         load_silence_log(write_text(tmp_path, "s.csv", text))
+
+
+# --- labels.csv ---
+
+LABEL_HEADER = "contract_id,question,answer,page,quote,note,pass\n"
+
+
+def test_labels_load(tmp_path):
+    p = write_text(
+        tmp_path,
+        "labels.csv",
+        LABEL_HEADER
+        + "tx-dir-deloitte-tiers,test,yes,12,The Contractor shall meet,,1\n"
+        + "tx-dir-deloitte-tiers,act,silent,,,,1\n",
+    )
+    rows = load_labels(p)
+    assert len(rows) == 2
+    assert rows[1].page is None
+
+
+def test_yes_label_needs_a_quote(tmp_path):
+    p = write_text(tmp_path, "labels.csv", LABEL_HEADER + "tx-dir-deloitte-tiers,test,yes,12,,,1\n")
+    with pytest.raises(LoadError, match="needs a page and a quote"):
+        load_labels(p)
+
+
+def test_withheld_is_not_a_label(tmp_path):
+    p = write_text(
+        tmp_path, "labels.csv", LABEL_HEADER + "tx-dir-deloitte-tiers,know,withheld,,,,1\n"
+    )
+    with pytest.raises(LoadError, match="contracts.yaml"):
+        load_labels(p)

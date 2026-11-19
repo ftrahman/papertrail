@@ -11,14 +11,17 @@ import re
 from pathlib import Path
 
 import yaml
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from .schemas import (
+    LABELS_OPTIONAL,
+    LABELS_REQUIRED,
     SILENCE_LOG_OPTIONAL,
     SILENCE_LOG_REQUIRED,
     Contract,
     ContractsFile,
     Definitions,
+    LabelRow,
     SilenceLogRow,
 )
 
@@ -101,7 +104,9 @@ def load_definitions(path: Path) -> Definitions:
         raise LoadError(_describe(e, path)) from e
 
 
-def load_silence_log(path: Path) -> list[SilenceLogRow]:
+def _load_csv[M: BaseModel](
+    path: Path, model: type[M], required: list[str], optional: list[str]
+) -> list[M]:
     try:
         f = path.open(newline="", encoding="utf-8")
     except FileNotFoundError as e:
@@ -109,8 +114,8 @@ def load_silence_log(path: Path) -> list[SilenceLogRow]:
     with f:
         reader = csv.DictReader(f)
         header = reader.fieldnames or []
-        missing = [c for c in SILENCE_LOG_REQUIRED if c not in header]
-        unknown = [c for c in header if c not in SILENCE_LOG_REQUIRED + SILENCE_LOG_OPTIONAL]
+        missing = [c for c in required if c not in header]
+        unknown = [c for c in header if c not in required + optional]
         if missing or unknown:
             parts = []
             if missing:
@@ -125,7 +130,15 @@ def load_silence_log(path: Path) -> list[SilenceLogRow]:
             if not any((v or "").strip() for v in row.values()):
                 continue  # skip blank lines
             try:
-                rows.append(SilenceLogRow.model_validate(row))
+                rows.append(model.model_validate(row))
             except ValidationError as e:
                 raise LoadError(_describe(e, path, f"line {reader.line_num}")) from e
         return rows
+
+
+def load_silence_log(path: Path) -> list[SilenceLogRow]:
+    return _load_csv(path, SilenceLogRow, SILENCE_LOG_REQUIRED, SILENCE_LOG_OPTIONAL)
+
+
+def load_labels(path: Path) -> list[LabelRow]:
+    return _load_csv(path, LabelRow, LABELS_REQUIRED, LABELS_OPTIONAL)

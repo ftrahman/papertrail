@@ -189,3 +189,33 @@ class SilenceLogRow(Strict):
         if self.date_answered and self.date_answered < self.date_filed:
             raise ValueError("date_answered is before date_filed")
         return self
+
+
+# --- labels.csv --------------------------------------------------------
+
+LABELS_REQUIRED = ["contract_id", "question", "answer", "page", "quote", "note", "pass"]
+LABELS_OPTIONAL: list[str] = []
+
+
+class LabelRow(Strict):
+    contract_id: Id
+    question: QuestionKey
+    answer: Answer
+    page: int | None = None
+    quote: str = ""
+    note: str = ""
+    label_pass: int = Field(1, ge=1, le=2, alias="pass")
+
+    @field_validator("page", mode="before")
+    @classmethod
+    def _blank_is_none(cls, v: object) -> object:
+        return None if isinstance(v, str) and not v.strip() else v
+
+    @model_validator(mode="after")
+    def _quoted_answers_need_evidence(self) -> LabelRow:
+        if self.answer in {Answer.YES, Answer.NO, Answer.PARTIAL}:
+            if self.page is None or not self.quote:
+                raise ValueError(f"a {self.answer} label needs a page and a quote")
+        if self.answer in {Answer.WITHHELD, Answer.NO_RECORD}:
+            raise ValueError("withheld and no record belong in contracts.yaml")
+        return self
