@@ -10,6 +10,7 @@ HEADER = "agency,request,date_filed,date_answered,outcome,notes,contract_id,url\
 CONTRACT = {
     "id": "c1",
     "title": "Contract one",
+    "level": "state",
     "agency": "Agency",
     "vendor": "Vendor",
     "system": "System",

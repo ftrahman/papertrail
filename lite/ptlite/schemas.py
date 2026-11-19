@@ -86,14 +86,21 @@ class RelatedDocument(Strict):
     pdf: str | None = None
 
 
+class Level(StrEnum):
+    FEDERAL = "federal"
+    STATE = "state"
+    LOCAL = "local"
+
+
 class Contract(Strict):
     id: Id
     title: NonEmpty
     source_url: str | None = None
+    level: Level
     agency: NonEmpty
     vendor: NonEmpty
     system: NonEmpty
-    state: NonEmpty
+    state: NonEmpty | None = None
     date: dt.date
     obtained_via: ObtainedVia
     pdf: str | None = None
@@ -107,6 +114,12 @@ class Contract(Strict):
         dupes = sorted({i for i in ids if ids.count(i) > 1})
         if dupes:
             raise ValueError(f"duplicate related document id(s): {', '.join(dupes)}")
+        return self
+
+    @model_validator(mode="after")
+    def _state_matches_level(self) -> Contract:
+        if self.level is not Level.FEDERAL and not self.state:
+            raise ValueError(f"state is required for a {self.level} contract")
         return self
 
 
