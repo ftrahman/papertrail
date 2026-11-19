@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 import pytest
 import yaml
@@ -25,7 +26,10 @@ CONTRACT = {
 }
 
 QUESTION = {"question": "Q?", "yes": "A clause obliges it", "partial": "", "no": ""}
-DEFINITIONS = {"version": "1", "questions": {k.value: dict(QUESTION) for k in QuestionKey}}
+DEFINITIONS: dict[str, Any] = {
+    "version": "1",
+    "questions": {k.value: dict(QUESTION) for k in QuestionKey},
+}
 
 HEADER = "agency,request,date_filed,date_answered,outcome,notes,contract_id,url\n"
 
